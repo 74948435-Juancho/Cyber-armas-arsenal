@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- CSP (OWASP A05): solo recursos propios + Google Fonts. Bloquea scripts/estilos inline inyectados (mitiga XSS). -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Cyber-Arms Arsenal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500&family=Chakra+Petch:wght@500;700&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#catalogo">Saltar al catálogo</a>
+
+  <header class="topbar">
+    <h1 class="brand">Cyber-Arms Arsenal</h1>
+    <nav class="topbar__nav" aria-label="Cuenta y carrito">
+      <button type="button" class="btn btn--ghost" id="btn-cuenta">Ingresar</button>
+      <button type="button" class="btn" id="btn-carrito" aria-haspopup="dialog">
+        Carrito <span class="badge" id="carrito-contador" aria-label="Artículos en el carrito">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Elige tu equipo</h2>
+      <p>Pasa el cursor sobre un arma para inspeccionarla en 3D. En pantallas táctiles, toca la tarjeta.</p>
+    </section>
+
+    <section class="controles" aria-label="Filtros del catálogo">
+      <label class="campo">
+        <span>Buscar</span>
+        <input type="search" id="filtro-q" placeholder="Nombre o descripción" autocomplete="off" maxlength="60">
+      </label>
+      <label class="campo">
+        <span>Categoría</span>
+        <select id="filtro-categoria">
+          <option value="todas">Todas</option>
+          <option value="pistola">Pistolas</option>
+          <option value="subfusil">Subfusiles</option>
+          <option value="rifle">Rifles</option>
+          <option value="escopeta">Escopetas</option>
+          <option value="francotirador">Francotiradores</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span>Ordenar por</span>
+        <select id="filtro-orden">
+          <option value="nombre">Nombre</option>
+          <option value="precio-asc">Precio: menor a mayor</option>
+          <option value="precio-desc">Precio: mayor a menor</option>
+          <option value="dano">Mayor daño</option>
+        </select>
+      </label>
+    </section>
+
+    <section id="catalogo" class="grid" aria-live="polite" aria-busy="true"></section>
+    <p id="vacio" class="estado" hidden>Ninguna arma coincide con los filtros. Prueba con otra búsqueda.</p>
+  </main>
+
+  <footer class="pie">
+    <p>Proyecto académico. Tienda ficticia con armas de videojuego; no se vende nada real.</p>
+  </footer>
+
+  <!-- Carrito (panel lateral) -->
+  <dialog id="dlg-carrito" class="drawer" aria-labelledby="carrito-titulo">
+    <div class="drawer__head">
+      <h2 id="carrito-titulo">Tu carrito</h2>
+      <button type="button" class="btn btn--ghost" data-cerrar="dlg-carrito">Cerrar</button>
+    </div>
+    <ul id="carrito-lista" class="carrito"></ul>
+    <div class="drawer__foot">
+      <p class="total"><span>Total</span> <strong id="carrito-total">0 cr</strong></p>
+      <button type="button" class="btn btn--block" id="btn-comprar" disabled>Procesar compra</button>
+    </div>
+  </dialog>
+
+  <!-- Registro / inicio de sesión -->
+  <dialog id="dlg-auth" class="modal" aria-labelledby="auth-titulo">
+    <form id="form-auth" novalidate>
+      <h2 id="auth-titulo">Ingresar</h2>
+      <div class="tabs" role="group" aria-label="Tipo de acceso">
+        <button type="button" class="tab" data-modo="login" aria-pressed="true">Tengo cuenta</button>
+        <button type="button" class="tab" data-modo="registro" aria-pressed="false">Crear cuenta</button>
+      </div>
+
+      <label class="campo" id="campo-nombre" hidden>
+        <span>Nombre</span>
+        <input type="text" name="nombre" autocomplete="name" minlength="2" maxlength="50">
+      </label>
+      <label class="campo">
+        <span>Correo</span>
+        <input type="email" name="email" autocomplete="email" required maxlength="100">
+      </label>
+      <label class="campo">
+        <span>Contraseña</span>
+        <input type="password" name="password" autocomplete="current-password" required minlength="8" maxlength="72">
+      </label>
+
+      <p id="auth-error" class="form-error" role="alert"></p>
+
+      <div class="acciones">
+        <button type="button" class="btn btn--ghost" data-cerrar="dlg-auth">Cancelar</button>
+        <button type="submit" class="btn" id="auth-enviar">Ingresar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Alertas interactivas (errores, confirmaciones) -->
+  <dialog id="dlg-alerta" class="modal" aria-labelledby="alerta-titulo" aria-describedby="alerta-msg">
+    <form method="dialog">
+      <h2 id="alerta-titulo"></h2>
+      <p id="alerta-msg"></p>
+      <div class="acciones">
+        <button value="cancel" class="btn btn--ghost" id="alerta-cancelar">Cancelar</button>
+        <button value="ok" class="btn" id="alerta-ok">Entendido</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Estado de carga global -->
+  <div id="loader" class="loader" role="status" aria-live="polite" hidden>
+    <span class="spinner" aria-hidden="true"></span>
+    <span id="loader-texto">Cargando...</span>
+  </div>
+
+  <!-- Avisos breves -->
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>

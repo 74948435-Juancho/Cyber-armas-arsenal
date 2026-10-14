@@ -1,0 +1,8 @@
+# Dependencias de Node (pesadas, no deben subirse a Git)
+node_modules/
+
+# Archivo de variables de entorno (claves secretas como JWT_SECRET)
+.env
+
+# Archivos temporales de SQLite
+*.db-journal
